@@ -7,6 +7,7 @@ with GWindows.Base; use GWindows.Base;
 with GWindows.Common_Controls; use GWindows.Common_Controls;
 with GWindows.Edit_Boxes; use GWindows.Edit_Boxes;
 with GWindows.Packing_Boxes; use GWindows.Packing_Boxes;
+with GWindows.Scroll_Panels; use GWindows.Scroll_Panels;
 with GWindows.Windows.Main; use GWindows.Windows.Main;
 
 with Constants; use Constants;
@@ -57,7 +58,7 @@ package body UI is
    Tab_Control_Box : Packing_Box_Type;
    Tab_Control     : Tab_Control_Type;
 
-   Tab_Edit_Box    : Packing_Box_Type;
+   Scroll_Panel    : Scroll_Panel_Type;
    Edit_Box        : Multi_Line_Edit_Box_Type;
    -- Init --
 
@@ -88,6 +89,7 @@ package body UI is
       Tab_Control.Insert_Tab(0,"defalut");
       Tab_Control_Box.Pack;
 
+      Scroll_Panel.Create(
       -- Pack items on the main window
       Dumpview_Main.Dock_Children;
 
