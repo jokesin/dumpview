@@ -1,0 +1,15 @@
+with GWindows.Windows.Main;
+
+package GUI is
+
+   type Main_Window_Type is new GWindows.Windows.Main with private;
+   
+private:
+   
+   type Main_Window_Type is new GWindows.Windows.Main with
+      record
+         null;
+      end record;
+   
+
+end GUI;
