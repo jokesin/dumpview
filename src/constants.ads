@@ -6,5 +6,6 @@ package Constants is
    IDM_ABOUT     : constant := 102;
 
    -- GUI constants
-   TAB_CONTROL_HEAD_HEIGHT : constant := 20;
+   TCM_FIRST      : constant := 16#1300#;
+   TCM_ADJUSTRECT : constant := TCM_FIRST + 40;
 end Constants;

@@ -1,5 +1,7 @@
 with GWindows.Base;
 with Gwindows.Menus;
+with GWindows.Common_Controls;
+with GWindows.Types;
 with GWindows.Windows.Main;
 
 package UI is
@@ -14,6 +16,12 @@ package UI is
 
    end Main_Menu;
    
+   -- Tab control
+   type Dumpview_Tab_Control_Type is new GWindows.Common_Controls.Tab_Control_Type with private;
+   function Adjust_Rect(Tab_Ctrl : Dumpview_Tab_Control_Type;
+                        F_Larger : Integer := 0) 
+                        return GWindows.Types.Rectangle_Type;
+   
    -- Main window
    type Dumpview_Main_Type is new GWindows.Windows.Main.Main_Window_Type with private;
    type Dumpview_Main_Access is access all Dumpview_Main_Type;
@@ -22,6 +30,7 @@ package UI is
    procedure Message_Loop;
    
 private
+   type Dumpview_Tab_Control_Type is new GWindows.Common_Controls.Tab_Control_Type with null record;
    
    type Dumpview_Main_Type is new GWindows.Windows.Main.Main_Window_Type with
       record

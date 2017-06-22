@@ -1,3 +1,5 @@
+with Ada.Unchecked_Conversion;
+
 with GWindows.Application;
 with GWindows.Drawing_Objects;
 with GWindows.Windows;
@@ -7,12 +9,28 @@ with GWindows.Base; use GWindows.Base;
 with GWindows.Common_Controls; use GWindows.Common_Controls;
 with GWindows.Edit_Boxes; use GWindows.Edit_Boxes;
 with GWindows.Packing_Boxes; use GWindows.Packing_Boxes;
-with GWindows.Scroll_Panels; use GWindows.Scroll_Panels;
+with GWindows.Types; use GWindows.Types;
 with GWindows.Windows.Main; use GWindows.Windows.Main;
+
+with System; use System;
+
+with Interfaces.C;
 
 with Constants; use Constants;
 
 package body UI is
+
+   package C renames Interfaces.C;
+
+   -- Common import functions
+
+   function LoadLibrary(lpFileName: C.char_array) return GWindows.Types.Handle
+        with Import, Convention => Stdcall, Link_Name => "_LoadLibraryA@4";
+
+   function GetProcAddress(hModule    : GWindows.Types.Handle;
+                           lpProcName : C.char_array) return Address
+     with Import, Convention => Stdcall, Link_Name => "_GetProcAddress@8";
+
 
    -- Main menu package
 
@@ -50,15 +68,55 @@ package body UI is
 
    end Main_Menu;
 
+   -- <Main menu>
+
+   -- Tab Control
+
+
+
+   function Adjust_Rect(Tab_Ctrl : Dumpview_Tab_Control_Type;
+                        F_Larger : Integer := 0)
+                        return GWindows.Types.Rectangle_Type is
+
+      type SendMessage_Type is access function
+        (hWnd : in GWindows.Types.Handle;
+         Msg  : in C.unsigned;
+         wParam : in GWindows.Types.Wparam;
+         lParam : in GWindows.Types.Lparam)
+         return GWindows.Types.Lresult
+        with Convention => Stdcall;
+      function SendMessage is new Ada.Unchecked_Conversion(Address, SendMessage_Type);
+
+      Library : GWindows.Types.Handle := LoadLibrary(C.To_C("user32.dll"));
+      Pointer : Address := GetProcAddress(Library,C.To_C("SendMessageA"));
+      Tab_Rect : aliased Rectangle_Type := (0,0,0,0);
+
+   begin
+      if Pointer /= Null_Address then
+         declare
+            function To_wParam is new Ada.Unchecked_Conversion(Integer, GWindows.Types.Wparam);
+            function To_lParam is new Ada.Unchecked_Conversion(Address, GWindows.Types.Lparam);
+            Result : GWindows.Types.Lresult := SendMessage(Pointer)(Tab_Ctrl.Handle, TCM_ADJUSTRECT,
+                                                                    To_wParam(F_Larger),
+                                                                    To_lParam(Tab_Rect'Address));
+
+         begin
+            null;
+         end;
+      end if;
+      return Tab_Rect;
+   end Adjust_Rect;
+
+   -- <Tab Control>
+
    -- Main window
 
    -- Global variables
 
    Dumpview_Main   : aliased Dumpview_Main_Type;
    Tab_Control_Box : Packing_Box_Type;
-   Tab_Control     : Tab_Control_Type;
+   Tab_Control     : Dumpview_Tab_Control_Type;
 
-   Scroll_Panel    : Scroll_Panel_Type;
    Edit_Box        : Multi_Line_Edit_Box_Type;
    -- Init --
 
@@ -89,13 +147,20 @@ package body UI is
       Tab_Control.Insert_Tab(0,"defalut");
       Tab_Control_Box.Pack;
 
-      Scroll_Panel.Create(
       -- Pack items on the main window
       Dumpview_Main.Dock_Children;
 
       -- Edit box multiline
 
-      Edit_Box.Create_Multi_Line(Tab_Control,"Test",0,20,Tab_Control.Width,Tab_Control.Height-20);
+      declare
+         Tab_Rect : Rectangle_Type := Tab_Control.Adjust_Rect;
+      begin
+         Edit_Box.Create_Multi_Line(Tab_Control,"Test",0,Tab_Rect.Top,
+                                    Tab_Control.Width,
+                                    Tab_Control.Height-Tab_Rect.Top);
+      end;
+
+
 
       return Dumpview_Main'Access;
    end Create;
