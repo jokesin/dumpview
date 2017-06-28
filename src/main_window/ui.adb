@@ -93,12 +93,12 @@ package body UI is
       Tab_Control_Box.Fill_Width;
       Tab_Control_Box.Fill_Height;
 
-      Dump_Tab_Controls.Create(Tab_Control_Box);
+      Dumpview_Main.Tab_Control.Create(Tab_Control_Box);
       -- Pack items on the main window
       Dumpview_Main.Dock_Children;
 
       -- Fill items now
-      Dump_Tab_Controls.Get.Create_List_View;
+      Dumpview_Main.Tab_Control.Create_List_View;
       return Dumpview_Main'Access;
    end Create;
 

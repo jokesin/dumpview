@@ -10,7 +10,7 @@ package body Dump_Tab_Controls is
    -- GLOBAL VARIABLES --
    ----------------------
    
-   Tab_Control       : aliased Dump_Tab_Control_Type;
+   
    
    ------------------------------------
    -- CLOSE PRIVATE PRIMITIVES DECLS --
@@ -22,21 +22,14 @@ package body Dump_Tab_Controls is
    
    -- Create
    
-   procedure Create(Tab_Ctrl_Box : in out Packing_Box_Type) 
-   is      
+   procedure Create(Tab_Ctrl     : in out Dump_Tab_Control_Type;
+                    Tab_Ctrl_Box : in out GWindows.Packing_Boxes.Packing_Box_Type) is  
    begin      
-      Tab_Control.Create(Tab_Ctrl_Box,0,0,0,0);
-      Tab_Control.Insert_Tab(0,"default");
+      Tab_Ctrl.Create(Tab_Ctrl_Box,0,0,0,0);
+      Tab_Ctrl.Insert_Tab(0,"default");
       Tab_Ctrl_Box.Pack;
    end Create;
-      
-   -- Get 
-   
-   function Get return Dump_Tab_Control is
-   begin
-      return Tab_Control'Access;
-   end Get;
-   
+         
    -- Create_List_View
    
    procedure Create_List_View(This : in out Dump_Tab_Control_Type)
