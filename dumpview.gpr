@@ -1,4 +1,5 @@
-with "..\..\Tools\gwindows\gwindows";
+with "..\..\Tools\gwindows\gwindows",
+     "..\..\Tools\strings_3_2\strings_edit";
 
 project Dumpview is
 

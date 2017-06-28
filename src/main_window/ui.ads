@@ -1,27 +1,40 @@
 with GWindows.Base;
 with Gwindows.Menus;
 with GWindows.Common_Controls;
+with GWindows.Packing_Boxes;
 with GWindows.Types;
 with GWindows.Windows.Main;
 
 package UI is
 
    -- Main menu
-   package Main_Menu is
-
-      procedure Init(Window : in out GWindows.Windows.Main.Main_Window_Type);
-      
-      procedure Menu_Select_Cb(Window : in out GWindows.Base.Base_Window_Type'Class;
-                               Item   : in     Integer);
-
-   end Main_Menu;
+   procedure Init_Menu(Window : in out GWindows.Windows.Main.Main_Window_Type);
    
+
    -- Tab control
-   type Dumpview_Tab_Control_Type is new GWindows.Common_Controls.Tab_Control_Type with private;
-   function Adjust_Rect(Tab_Ctrl : Dumpview_Tab_Control_Type;
-                        F_Larger : Integer := 0) 
-                        return GWindows.Types.Rectangle_Type;
    
+   
+   
+   -- Dump_Tab_Controls
+   package Dump_Tab_Controls is      
+      type Dump_Tab_Control_Type is new GWindows.Common_Controls.Tab_Control_Type with private;
+      type Dump_Tab_Control is access all Dump_Tab_Control_Type;
+      
+      procedure Create(Tab_Ctrl_Box : in out GWindows.Packing_Boxes.Packing_Box_Type);
+      function Get return Dump_Tab_Control;
+      procedure Create_List_View(This : in out Dump_Tab_Control_Type);
+   private
+      type Dump_Tab_Control_Type is new GWindows.Common_Controls.Tab_Control_Type with
+         record
+            List_View : GWindows.Common_Controls.List_View_Control_Type;
+         end record;
+      
+      function Get_Delta_Rect(This : Dump_Tab_Control_Type)
+                              return GWindows.Types.Rectangle_Type;
+      
+      
+   end Dump_Tab_Controls;
+      
    -- Main window
    type Dumpview_Main_Type is new GWindows.Windows.Main.Main_Window_Type with private;
    type Dumpview_Main_Access is access all Dumpview_Main_Type;
@@ -30,7 +43,7 @@ package UI is
    procedure Message_Loop;
    
 private
-   type Dumpview_Tab_Control_Type is new GWindows.Common_Controls.Tab_Control_Type with null record;
+   
    
    type Dumpview_Main_Type is new GWindows.Windows.Main.Main_Window_Type with
       record

@@ -16,109 +16,60 @@ with System; use System;
 
 with Interfaces.C;
 
+with UI.Callbacks; use UI.Callbacks;
 with Constants; use Constants;
 
 package body UI is
 
    package C renames Interfaces.C;
 
-   -- Common import functions
+   -----------------------------
+   -- COMMON IMPORT FUNCTIONS --
+   -----------------------------
 
    function LoadLibrary(lpFileName: C.char_array) return GWindows.Types.Handle
-        with Import, Convention => Stdcall, Link_Name => "_LoadLibraryA@4";
+        with Import, Convention => Stdcall, External_Name => "LoadLibraryA";
 
    function GetProcAddress(hModule    : GWindows.Types.Handle;
                            lpProcName : C.char_array) return Address
-     with Import, Convention => Stdcall, Link_Name => "_GetProcAddress@8";
+     with Import, Convention => Stdcall, External_Name => "GetProcAddress";
 
 
-   -- Main menu package
+   ------------------------------
+   -- NESTED SEPARATE PACKAGES --
+   ------------------------------
 
-   package body Main_Menu is
+   package body Dump_Tab_Controls is separate;
 
-      -- Init
-      procedure Init(Window : in out Main_Window_Type) is
-         Main_Menu : Menu_Type := Create_Menu;
-         File_Menu : Menu_Type := Create_Popup;
-      begin
-         Append_Item(File_Menu,"&Open",IDM_FILE_OPEN);
-         Append_Separator(File_Menu);
-         Append_Item(File_Menu,"&Exit",IDM_EXIT);
-         Append_Menu(Main_Menu,"&File",File_Menu);
-         Append_Item(Main_Menu,"A&bout",IDM_ABOUT);
+   ----------------------
+   -- GLOBAL VARIABLES --
+   ----------------------
 
-         Window.Menu(Main_Menu);
-         Window.On_Menu_Select_Handler(Menu_Select_Cb'Access);
-      end Init;
+   Dumpview_Main     : aliased Dumpview_Main_Type;
+   Tab_Control_Box   : Packing_Box_Type;
 
-      -- Menu_Select_Cb
-      procedure Menu_Select_Cb(Window : in out Base_Window_Type'Class;
-                               Item   : in     Integer) is
-      begin
-         case Item is
+   -----------------------
+   -- PUBLIC PRIMITIVES --
+   -----------------------
 
-            when IDM_EXIT =>
-               Window.Close;
+   -- Init_Menu
 
-            when others =>
-               null;
-
-         end case;
-      end Menu_Select_Cb;
-
-   end Main_Menu;
-
-   -- <Main menu>
-
-   -- Tab Control
-
-
-
-   function Adjust_Rect(Tab_Ctrl : Dumpview_Tab_Control_Type;
-                        F_Larger : Integer := 0)
-                        return GWindows.Types.Rectangle_Type is
-
-      type SendMessage_Type is access function
-        (hWnd : in GWindows.Types.Handle;
-         Msg  : in C.unsigned;
-         wParam : in GWindows.Types.Wparam;
-         lParam : in GWindows.Types.Lparam)
-         return GWindows.Types.Lresult
-        with Convention => Stdcall;
-      function SendMessage is new Ada.Unchecked_Conversion(Address, SendMessage_Type);
-
-      Library : GWindows.Types.Handle := LoadLibrary(C.To_C("user32.dll"));
-      Pointer : Address := GetProcAddress(Library,C.To_C("SendMessageA"));
-      Tab_Rect : aliased Rectangle_Type := (0,0,0,0);
-
+   procedure Init_Menu(Window : in out Main_Window_Type) is
+      Main_Menu               : Menu_Type := Create_Menu;
+      File_Menu               : Menu_Type := Create_Popup;
    begin
-      if Pointer /= Null_Address then
-         declare
-            function To_wParam is new Ada.Unchecked_Conversion(Integer, GWindows.Types.Wparam);
-            function To_lParam is new Ada.Unchecked_Conversion(Address, GWindows.Types.Lparam);
-            Result : GWindows.Types.Lresult := SendMessage(Pointer)(Tab_Ctrl.Handle, TCM_ADJUSTRECT,
-                                                                    To_wParam(F_Larger),
-                                                                    To_lParam(Tab_Rect'Address));
+      Append_Item(File_Menu,"&Open",IDM_FILE_OPEN);
+      Append_Separator(File_Menu);
+      Append_Item(File_Menu,"&Exit",IDM_EXIT);
+      Append_Menu(Main_Menu,"&File",File_Menu);
+      Append_Item(Main_Menu,"A&bout",IDM_ABOUT);
 
-         begin
-            null;
-         end;
-      end if;
-      return Tab_Rect;
-   end Adjust_Rect;
+      Window.Menu(Main_Menu);
+      Window.On_Menu_Select_Handler(Menu_Select_Cb'Access);
+   end Init_Menu;
 
-   -- <Tab Control>
 
-   -- Main window
-
-   -- Global variables
-
-   Dumpview_Main   : aliased Dumpview_Main_Type;
-   Tab_Control_Box : Packing_Box_Type;
-   Tab_Control     : Dumpview_Tab_Control_Type;
-
-   Edit_Box        : Multi_Line_Edit_Box_Type;
-   -- Init --
+   -- Create --
 
    function Create return Dumpview_Main_Access is
    begin
@@ -135,33 +86,19 @@ package body UI is
       end;
 
       -- Init menu
-      Main_Menu.Init(Main_Window_Type(Dumpview_Main));
+      Init_Menu(Main_Window_Type(Dumpview_Main));
 
-      -- Default tab control
       Tab_Control_Box.Create(Dumpview_Main,0,0,0,0);
       Tab_Control_Box.Dock(Fill);
       Tab_Control_Box.Fill_Width;
       Tab_Control_Box.Fill_Height;
 
-      Tab_Control.Create(Tab_Control_Box,0,0,0,0);
-      Tab_Control.Insert_Tab(0,"defalut");
-      Tab_Control_Box.Pack;
-
+      Dump_Tab_Controls.Create(Tab_Control_Box);
       -- Pack items on the main window
       Dumpview_Main.Dock_Children;
 
-      -- Edit box multiline
-
-      declare
-         Tab_Rect : Rectangle_Type := Tab_Control.Adjust_Rect;
-      begin
-         Edit_Box.Create_Multi_Line(Tab_Control,"Test",0,Tab_Rect.Top,
-                                    Tab_Control.Width,
-                                    Tab_Control.Height-Tab_Rect.Top);
-      end;
-
-
-
+      -- Fill items now
+      Dump_Tab_Controls.Get.Create_List_View;
       return Dumpview_Main'Access;
    end Create;
 
